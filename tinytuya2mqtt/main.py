@@ -421,7 +421,7 @@ def read_and_publish_status(device: Device):
         return
 
     logger.debug('RAW:     %s', status)
-    logger.debug('STATUS %s', _get_friendly_status(device, status))
+    logger.debug('STATUS:  %s', _get_friendly_status(device, status))
 
     if not status:
         logger.error('Failed getting device status %s', device.id)
