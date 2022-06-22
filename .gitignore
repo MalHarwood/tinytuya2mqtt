@@ -5,3 +5,5 @@ venv
 
 snapshot.json
 tinytuya2mqtt.ini
+
+.vs/

@@ -24,9 +24,9 @@ if os.environ.get('DEBUG'):
 if os.environ.get('TINYTUYA_DEBUG'):
     tinytuya.set_debug()
 
-
 MQTT_BROKER = None
-TIME_SLEEP = 5
+MQTT_TOPIC = 'home/'
+TIME_SLEEP = 30
 
 
 @dataclasses.dataclass
@@ -55,8 +55,6 @@ class Light(Entity):
     brightness_steps: List[int] = dataclasses.field(default=None)
     temp_pin: str = dataclasses.field(default=None)
 
-
-
 def autoconfigure_fan(device: Device):
     '''
     Send MQTT discovery messages for a fan entity
@@ -67,11 +65,13 @@ def autoconfigure_fan(device: Device):
     data = {
         'name': device.name,
         'unique_id': device.id,
-        'availability_topic': f'home/{device.id}/online',
-        'state_topic': f'home/{device.id}/fan/state',  # fan ON/OFF
-        'command_topic': f'home/{device.id}/fan/command',
-        'percentage_state_topic': f'home/{device.id}/fan/speed/state',
-        'percentage_command_topic': f'home/{device.id}/fan/speed/command',
+        'availability_topic': f'{MQTT_TOPIC}/{device.id}/online',
+        'state_topic': f'{MQTT_TOPIC}/{device.id}/fan/state',  # fan ON/OFF
+        'command_topic': f'{MQTT_TOPIC}/{device.id}/fan/command',
+        'percentage_state_topic': f'{MQTT_TOPIC}/{device.id}/fan/speed/state',
+        'percentage_command_topic': f'{MQTT_TOPIC}/{device.id}/fan/speed/command',
+        'eco_state_topic': f'{MQTT_TOPIC}/{device.id}/fan/eco/state',
+        'eco_command_topic': f'{MQTT_TOPIC}/{device.id}/fan/eco/command',
         'device': {
             'identifiers': [device.id, device.mac],
             'name': device.name,
@@ -99,12 +99,12 @@ def autoconfigure_light(device: Device):
     data = {
         'name': device_name,
         'unique_id': device.id,
-        'availability_topic': f'home/{device.id}/online',
-        'state_topic': f'home/{device.id}/light/state',  # light ON/OFF
-        'command_topic': f'home/{device.id}/light/command',
+        'availability_topic': f'{MQTT_TOPIC}/{device.id}/online',
+        'state_topic': f'{MQTT_TOPIC}/{device.id}/light/state',  # light ON/OFF
+        'command_topic': f'{MQTT_TOPIC}/{device.id}/light/command',
         'brightness_scale': 100,
-        'brightness_state_topic': f'home/{device.id}/light/brightness/state',
-        'brightness_command_topic': f'home/{device.id}/light/brightness/command',
+        'brightness_state_topic': f'{MQTT_TOPIC}/{device.id}/light/brightness/state',
+        'brightness_command_topic': f'{MQTT_TOPIC}/{device.id}/light/brightness/command',
         'device': {
             'identifiers': [device.id, device.mac],
             'name': device.name,
@@ -221,6 +221,8 @@ def read_config() -> List[Device]:
             elif parts[0] == 'broker':
                 global MQTT_BROKER  # pylint: disable=global-statement
                 MQTT_BROKER = dict(cfg.items(section))['hostname']
+                global MQTT_TOPIC  # pylint: disable=global-statement
+                MQTT_TOPIC = dict(cfg.items(section))['topic']
 
     except KeyError:
         logger.error('Malformed broker section in tinytuya2mqtt.ini')
@@ -251,7 +253,7 @@ def on_connect(client, userdata, flags, rc):  # pylint: disable=unused-argument
     command_topics = []
 
     for cmd in ('fan', 'fan/speed', 'light', 'light/brightness'):
-        command_topic = f"home/{userdata['device'].id}/{cmd}/command"
+        command_topic = f"{MQTT_TOPIC}/{userdata['device'].id}/{cmd}/command"
         command_topics.append((command_topic, 0))
 
     ret = client.subscribe(command_topics, 0)
@@ -373,12 +375,12 @@ def build_fan_msgs(status: dict, entity: Entity) -> List[tuple]:
         return
 
     msgs = [(
-        f'home/{entity.device.id}/fan/state', 'ON' if status[entity.state_pin] else 'OFF'
+        f'{MQTT_TOPIC}/{entity.device.id}/fan/state', 'ON' if status[entity.state_pin] else 'OFF'
     )]
 
     if entity.speed_pin in status:
         msgs.append((
-            f'home/{entity.device.id}/fan/speed/state',
+            f'{MQTT_TOPIC}/{entity.device.id}/fan/speed/state',
             speed_to_pct(status[entity.speed_pin], entity.speed_steps[-1])
         ))
     return msgs
@@ -397,12 +399,12 @@ def build_light_msgs(status: dict, entity: Entity) -> List[tuple]:
         return
 
     msgs = [(
-        f'home/{entity.device.id}/light/state', 'ON' if status[entity.state_pin] else 'OFF'
+        f'{MQTT_TOPIC}/{entity.device.id}/light/state', 'ON' if status[entity.state_pin] else 'OFF'
     )]
 
     if entity.brightness_pin in status:
         msgs.append((
-            f'home/{entity.device.id}/light/brightness/state',
+            f'{MQTT_TOPIC}/{entity.device.id}/light/brightness/state',
             speed_to_pct(status[entity.brightness_pin], entity.brightness_steps[-1])
         ))
     return msgs
@@ -427,7 +429,7 @@ def read_and_publish_status(device: Device):
         logger.error('Failed getting device status %s', device.id)
         return
 
-    msgs = [(f'home/{device.id}/online', 'online')]
+    msgs = [(f'{MQTT_TOPIC}/{device.id}/online', 'online')]
 
     for entity in device.entities:
         if isinstance(entity, Fan):
