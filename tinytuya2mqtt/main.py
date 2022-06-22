@@ -372,6 +372,7 @@ def poll(device: Device):
     client.on_message = on_message
     client.on_disconnect = on_disconnect
     client.on_log = on_log
+    client.will_set(f'{MQTT_TOPIC}/{device.id}/$status', payload="lost", qos=1, retain=True)
     client.connect(MQTT_BROKER)
     client.loop_start()
 
