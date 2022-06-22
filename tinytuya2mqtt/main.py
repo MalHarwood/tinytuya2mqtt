@@ -252,13 +252,12 @@ def on_connect(client, userdata, flags, rc):  # pylint: disable=unused-argument
     '''
     command_topics = []
 
-    for cmd in ('fan', 'fan/speed', 'light', 'light/brightness'):
+    for cmd in ('fan', 'fan/speed', 'fan/eco', 'fan/dir', 'light', 'light/brightness', 'light/temp'):
         command_topic = f"{MQTT_TOPIC}/{userdata['device'].id}/{cmd}/command"
         command_topics.append((command_topic, 0))
 
     ret = client.subscribe(command_topics, 0)
     logger.info('Subscribing to %s: %s', command_topics, ret)
-
 
 def on_disconnect(client, userdata, rc):  # pylint: disable=unused-argument
     'Debug logging of disconnects'
@@ -305,6 +304,22 @@ def on_message(_, userdata: dict, msg: bytes):
         val = pct_to_speed(int(msg.payload), entity.speed_steps[-1])
         _set_value(device, entity.speed_pin, val)
 
+    # Fan dir
+    elif msg.topic.endswith('/fan/dir/command'):
+        dps = device.dps['fan_dir']
+        val = msg.payload.decode("utf-8")
+
+        logger.debug('Setting %s to %s', dps, val)
+        device.tuya.set_value(dps, val)
+
+    # Fan Eco Mode
+    elif msg.topic.endswith('/fan/eco/command'):
+        dps = device.dps['fan_eco']
+        val = 'ECO' if (msg.payload == b'ON') else 'Normal'
+
+        logger.debug('Setting %s to %s', dps, val)
+        device.tuya.set_value(dps, val)
+
     # Light on/off
     elif msg.topic.endswith('/light/command'):
         _set_status(device, entity.state_pin, bool(msg.payload == b'ON'))
@@ -313,6 +328,14 @@ def on_message(_, userdata: dict, msg: bytes):
     elif msg.topic.endswith('/light/brightness/command'):
         val = pct_to_speed(int(msg.payload), entity.brightness_steps[-1])
         _set_value(device, entity.brightness_pin, val)
+
+    # Light temp
+    elif msg.topic.endswith('/light/temp/command'):
+        dps = device.dps['light_temp']
+        val = msg.payload.decode("utf-8")
+
+        logger.debug('Setting %s to %s', dps, val)
+        device.tuya.set_value(dps, val)
 
     # Immediately publish status back to HA
     read_and_publish_status(userdata['device'])
