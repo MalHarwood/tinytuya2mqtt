@@ -487,8 +487,10 @@ def _get_friendly_status(device: Device, status: dict) -> dict:
 
         # Return entity type-specific pin statuses
         if isinstance(entity, Fan):
+          if entity.speed_pin in status:
             output['fan_speed_pin'] = status[entity.speed_pin]
         elif isinstance(entity, Light):
+          if entity.brightness_pin in status:
             output['light_brightness_pin'] = status[entity.brightness_pin]
 
     return output
