@@ -483,7 +483,8 @@ def _get_friendly_status(device: Device, status: dict) -> dict:
 
     for entity in device.entities:
         # Return entity.state_pin status
-        output['{}_state'.format(type(entity).__name__.lower())] = status[entity.state_pin]
+        if entity.speed_pin in status:
+          output['{}_state'.format(type(entity).__name__.lower())] = status[entity.state_pin]
 
         # Return entity type-specific pin statuses
         if isinstance(entity, Fan):
