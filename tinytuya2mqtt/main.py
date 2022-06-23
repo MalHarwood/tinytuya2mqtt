@@ -286,9 +286,9 @@ def on_message(_, userdata: dict, msg: bytes):
 
     entity = None
 
-    if msg.topic.startswith(f'home/{device.id}/fan'):
+    if msg.topic.startswith(f'{MQTT_TOPIC}/{device.id}/fan'):
         entity = next((e for e in device.entities if isinstance(e, Fan)), None)
-    elif msg.topic.startswith(f'home/{device.id}/light'):
+    elif msg.topic.startswith(f'{MQTT_TOPIC}/{device.id}/light'):
         entity = next((e for e in device.entities if isinstance(e, Light)), None)
 
     if not entity:
