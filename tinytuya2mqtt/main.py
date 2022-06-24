@@ -453,8 +453,8 @@ def read_and_publish_status(device: Device):
         logger.error('Failed getting device status %s', device.id)
         return
 
-     #msgs = [(f'{MQTT_TOPIC}/{device.id}/online', 'online')]
-     msgs = [(f'{MQTT_TOPIC}/{device.id}/$status', 'online')]
+    #msgs = [(f'{MQTT_TOPIC}/{device.id}/online', 'online')]
+    msgs = [(f'{MQTT_TOPIC}/{device.id}/$status', 'online')]
 
     for entity in device.entities:
         if isinstance(entity, Fan):
