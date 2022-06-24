@@ -462,7 +462,8 @@ def read_and_publish_status(device: Device):
         elif isinstance(entity, Light):
             entity_msgs = build_light_msgs(status, entity)
 
-        msgs += entity_msgs
+        if entity_msgs:
+          msgs += entity_msgs
 
     logger.debug('PUBLISH: %s', msgs)
     publish.multiple(msgs, hostname=MQTT_BROKER)
