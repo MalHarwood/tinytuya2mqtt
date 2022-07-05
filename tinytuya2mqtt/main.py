@@ -26,7 +26,7 @@ if os.environ.get('TINYTUYA_DEBUG'):
 
 MQTT_BROKER = None
 MQTT_TOPIC = 'home/'
-TIME_SLEEP = 30
+TIME_SLEEP = 5
 
 
 @dataclasses.dataclass
