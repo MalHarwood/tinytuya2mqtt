@@ -462,6 +462,7 @@ def read_and_publish_status(device: Device):
 
     #msgs = [(f'{MQTT_TOPIC}/{device.id}/online', 'online')]
     #msgs = [(f'{MQTT_TOPIC}/{device.id}/$status', 'online')]
+    msgs - []
 
     for entity in device.entities:
         if isinstance(entity, Fan):
