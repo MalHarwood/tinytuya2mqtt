@@ -259,12 +259,12 @@ def on_connect(client, userdata, flags, rc):  # pylint: disable=unused-argument
     ret = client.subscribe(command_topics, 0)
     logger.info('Subscribing to %s: %s', command_topics, ret)
 
-    client.publish(f'{MQTT_TOPIC}/{device.id}/$status', payload='online', qos=1, retain=true)
+    client.publish(f'{MQTT_TOPIC}/{userdata['device'].id}/$status', payload='online', qos=1, retain=true)
 
 def on_disconnect(client, userdata, rc):  # pylint: disable=unused-argument
     'Debug logging of disconnects'
     logger.debug('Disconnect: %s', rc)
-    client.publish(f'{MQTT_TOPIC}/{device.id}/$status', payload='disconnect', qos=1, retain=true)
+    client.publish(f'{MQTT_TOPIC}/{userdata['device'].id}/$status', payload='disconnect', qos=1, retain=true)
 
 
 def on_log(client, userdata, level, buf):  # pylint: disable=unused-argument
