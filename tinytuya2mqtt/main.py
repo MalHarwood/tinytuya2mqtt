@@ -48,6 +48,8 @@ class Entity:
 class Fan(Entity):
     speed_pin: str = dataclasses.field(default=None)
     speed_steps: List[int] = dataclasses.field(default=None)
+    dir_pin: str = dataclasses.field(default=None)
+    eco_pin: str = dataclasses.field(default=None)
 
 @dataclasses.dataclass
 class Light(Entity):
@@ -198,6 +200,8 @@ def read_config() -> List[Device]:
                         entity = Fan(
                             state_pin=entities['fan_state_pin'],
                             speed_pin=entities['fan_speed_pin'],
+                            dir_pin=entities['fan_dir_pin'],
+                            eco_pin=entities['fan_eco_pin'],
                             speed_steps=[int(i) for i in entities['fan_speed_steps'].split(',')],
                             device=devices[device_id],
                         )
@@ -457,7 +461,7 @@ def read_and_publish_status(device: Device):
         return
 
     #msgs = [(f'{MQTT_TOPIC}/{device.id}/online', 'online')]
-    msgs = [(f'{MQTT_TOPIC}/{device.id}/$status', 'online')]
+    #msgs = [(f'{MQTT_TOPIC}/{device.id}/$status', 'online')]
 
     for entity in device.entities:
         if isinstance(entity, Fan):
